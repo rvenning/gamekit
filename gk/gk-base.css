@@ -8,6 +8,10 @@
 
    Game-specific styles (backgrounds, world maps, HUDs) stay in the game. */
 
+/* Kit components must not depend on the host page's box-sizing reset:
+   width:100% + padding on inputs/buttons overflows without border-box. */
+.screen, .screen *, .modal, .modal *, .toast { box-sizing: border-box; }
+
 :root {
   --gk-accent: #ffb32b;
   --gk-accent-sh: #d98e12;
