@@ -260,9 +260,12 @@ GK.Profiles = {
 <div class="modal" id="gk-new-profile-modal">
   <div class="sheet">
     <h2>New Player</h2>
-    <input id="gk-new-name" maxlength="14" placeholder="Name" autocomplete="off" />
+    <input id="gk-new-name" maxlength="${this.cfg.maxNameLen}" placeholder="Name" autocomplete="off"
+           onkeydown="if(event.key==='Enter')GK.Profiles.create()" />
     <div class="avatar-grid" id="gk-avatar-grid"></div>
-    <input id="gk-new-pin" maxlength="4" inputmode="numeric" placeholder="PIN (optional, 4 digits)" autocomplete="off" />
+    <input id="gk-new-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (optional, 4 digits)" autocomplete="off"
+           oninput="this.value=this.value.replace(/\\D/g,'')"
+           onkeydown="if(event.key==='Enter')GK.Profiles.create()" />
     <div class="row-btns2">
       <button class="btn grey" onclick="GK.UI.closeModal('gk-new-profile-modal')">Cancel</button>
       <button class="btn green" onclick="GK.Profiles.create()">Create</button>
@@ -273,7 +276,9 @@ GK.Profiles = {
   <div class="sheet">
     <h2 id="gk-del-title">Delete?</h2>
     <p>This removes the profile and all its progress on every device. Type <b id="gk-del-name"></b> to confirm.</p>
-    <input id="gk-del-confirm" placeholder="Type name" autocomplete="off" oninput="GK.Profiles._updateDeleteButton()" />
+    <input id="gk-del-confirm" placeholder="Type name" autocomplete="off"
+           oninput="GK.Profiles._updateDeleteButton()"
+           onkeydown="if(event.key==='Enter')GK.Profiles.confirmDelete()" />
     <div class="row-btns2">
       <button class="btn grey" onclick="GK.UI.closeModal('gk-delete-modal')">Cancel</button>
       <button class="btn danger" id="gk-btn-delete-confirm" onclick="GK.Profiles.confirmDelete()">Delete</button>
