@@ -1,0 +1,16 @@
+{
+  "name": "Reflex — gamekit demo",
+  "short_name": "Reflex",
+  "description": "Tap when it turns green. A tiny demo of the gamekit components.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2d1e4f",
+  "background_color": "#47307f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

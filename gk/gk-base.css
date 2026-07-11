@@ -1,0 +1,122 @@
+/* gamekit · gk-base.css — shared UI primitives for family games.
+   Theme by overriding the custom properties in your game stylesheet:
+
+     :root {
+       --gk-accent: #ffb32b;  --gk-accent-sh: #d98e12;
+       --gk-ink: #12232e;     --gk-card: rgba(255,255,255,.95);
+     }
+
+   Game-specific styles (backgrounds, world maps, HUDs) stay in the game. */
+
+:root {
+  --gk-accent: #ffb32b;
+  --gk-accent-sh: #d98e12;
+  --gk-green: #43c65a;   --gk-green-sh: #2f9a41;
+  --gk-blue:  #3f9be0;   --gk-blue-sh:  #2b74ab;
+  --gk-grey:  #8794a0;   --gk-grey-sh:  #5e6b76;
+  --gk-danger:#e94f4f;   --gk-danger-sh:#b83636;
+  --gk-ink:   #12232e;
+  --gk-card:  rgba(255,255,255,.95);
+  --gk-input-border: #d8dee4;
+  --gk-key-bg: #f0f3f6;
+}
+
+/* ---------- Screens ---------- */
+.screen { position:fixed; inset:0; display:none; flex-direction:column;
+          align-items:center; justify-content:flex-start; overflow-y:auto;
+          touch-action:pan-y; }
+.screen.active { display:flex; }
+
+.topbar { width:100%; max-width:560px; display:flex; align-items:center; gap:10px;
+          padding: calc(14px + env(safe-area-inset-top)) 16px 6px; }
+.topbar .grow { flex:1; }
+.iconbtn { background:rgba(255,255,255,.9); border:none; border-radius:14px;
+           width:46px; height:46px; font-size:22px; cursor:pointer; color:var(--gk-ink);
+           box-shadow:0 4px 0 rgba(0,0,0,.18); }
+.iconbtn:active { transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
+
+h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25); }
+.subtitle { opacity:.95; font-size:17px; margin:0 0 8px; }
+.content { width:100%; max-width:560px; padding:8px 16px 40px; }
+
+/* ---------- Buttons ---------- */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px;
+       border:none; border-radius:16px; padding:16px 22px; font-size:19px; font-weight:800;
+       cursor:pointer; color:#fff; background:var(--gk-accent); box-shadow:0 6px 0 var(--gk-accent-sh);
+       margin:8px 0; }
+.btn.green  { background:var(--gk-green);  box-shadow:0 6px 0 var(--gk-green-sh); }
+.btn.blue   { background:var(--gk-blue);   box-shadow:0 6px 0 var(--gk-blue-sh); }
+.btn.grey   { background:var(--gk-grey);   box-shadow:0 6px 0 var(--gk-grey-sh); }
+.btn.danger { background:var(--gk-danger); box-shadow:0 6px 0 var(--gk-danger-sh); }
+.btn.wide   { width:100%; }
+.btn:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.3); }
+.btn:disabled { filter:grayscale(.7) brightness(.9); cursor:not-allowed; }
+
+/* ---------- Profile roster (rendered by gk-profiles.js) ---------- */
+.profile-list { display:flex; flex-direction:column; gap:12px; }
+.profile-card { position:relative; display:grid; grid-template-columns:56px 1fr auto;
+                align-items:center; gap:12px; background:var(--gk-card); color:var(--gk-ink);
+                border-radius:18px; padding:14px 16px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.15); }
+.profile-card:active { transform:translateY(2px); }
+.profile-card .avatar { font-size:40px; grid-row:1/3; text-align:center; }
+.profile-card .pname { font-weight:800; font-size:20px; }
+.profile-card .pmeta { font-size:14px; opacity:.7; grid-column:2; }
+.profile-card.add { opacity:.9; grid-template-columns:56px 1fr; }
+.profile-card .ppin, .profile-card .pdelete {
+    background:none; border:none; font-size:20px; cursor:pointer; grid-row:1/3; }
+.profile-card .row-btns { grid-row:1/3; display:flex; gap:2px; }
+
+/* ---------- Leaderboard (rendered by gk-profiles.js) ---------- */
+.lb-row { display:grid; grid-template-columns:44px 46px 1fr auto auto; align-items:center; gap:10px;
+          background:var(--gk-card); color:var(--gk-ink); border-radius:14px; padding:10px 14px; margin:8px 0;
+          box-shadow:0 4px 0 rgba(0,0,0,.12); }
+.lb-row.me { outline:3px solid var(--gk-accent); }
+.lb-rank { font-size:22px; font-weight:900; text-align:center; }
+.lb-avatar { font-size:30px; }
+.lb-name { font-weight:800; }
+.lb-stat { font-size:14px; font-weight:700; opacity:.85; white-space:nowrap; }
+.lb-empty { text-align:center; opacity:.85; padding:30px; }
+
+/* ---------- Modals (gk-profiles.js / gk-pwa.js inject these) ---------- */
+.modal { position:fixed; inset:0; display:none; place-items:center; z-index:50;
+         background:rgba(0,0,0,.5); padding:20px; }
+.modal.visible { display:grid; }
+.sheet { background:#fff; color:var(--gk-ink); border-radius:22px; padding:24px; width:100%;
+         max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.5); text-align:center; }
+.sheet h2 { margin:0 0 6px; font-size:24px; }
+.sheet p { margin:6px 0; opacity:.8; }
+.sheet input { width:100%; padding:14px; font-size:18px; border:2px solid var(--gk-input-border);
+               border-radius:14px; margin:8px 0; text-align:center; }
+.avatar-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin:12px 0; }
+.avatar-choice { font-size:28px; padding:8px 0; border:2px solid transparent; border-radius:14px;
+                 background:var(--gk-key-bg); cursor:pointer; }
+.avatar-choice.selected { border-color:var(--gk-accent); background:#fff4dc;
+                          background:color-mix(in srgb, var(--gk-accent) 18%, #fff); }
+.row-btns2 { display:flex; gap:10px; margin-top:10px; }
+.row-btns2 .btn { flex:1; margin:0; }
+
+/* ---------- PIN keypad ---------- */
+.pin-dots { display:flex; gap:14px; justify-content:center; margin:14px 0; }
+.pin-dots span { width:16px; height:16px; border-radius:50%; background:var(--gk-input-border); }
+.pin-dots span.on { background:var(--gk-accent); }
+.pin-dots.shake { animation: gk-shake .4s; }
+@keyframes gk-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:8px 0; }
+.pin-key { font-size:24px; font-weight:800; padding:16px 0; border:none; border-radius:14px;
+           background:var(--gk-key-bg); cursor:pointer; color:var(--gk-ink); }
+.pin-key.blank { background:transparent; cursor:default; }
+
+/* ---------- Toast ---------- */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+         background:rgba(0,0,0,.8); color:#fff; padding:12px 20px; border-radius:14px;
+         font-weight:700; opacity:0; transition:opacity .3s; pointer-events:none; z-index:80; }
+.toast.show { opacity:1; }
+
+/* ---------- Touch devices (iPad-first) ---------- */
+@media (pointer: coarse) {
+  .iconbtn { width:54px; height:54px; font-size:24px; }
+  .btn { padding:18px 24px; font-size:20px; }
+  .pin-key { padding:20px 0; font-size:26px; }
+  .profile-card { padding:18px; }
+  .profile-card .ppin, .profile-card .pdelete { font-size:24px; padding:10px; }
+}

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#2d1e4f" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<title>Reflex — gamekit demo</title>
+
+<!-- the kit (a real game vendors these as lib/; the demo lives in the repo) -->
+<link rel="stylesheet" href="../gk/gk-base.css" />
+
+<style>
+  /* Game theme: override the kit palette, style game-specific bits. */
+  :root { --gk-accent:#ff5c8a; --gk-accent-sh:#c73763; }
+  html, body { margin:0; height:100%; overflow:hidden; color:#fff;
+    font-family:-apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    user-select:none; -webkit-user-select:none; background:#2d1e4f; }
+  .screen.opaque { background: radial-gradient(120% 80% at 50% -10%, #6d4fc3 0%, #47307f 45%, #2d1e4f 100%); }
+
+  #target { width:min(70vw,340px); height:min(70vw,340px); border-radius:50%; border:none;
+    margin:40px auto; display:block; font-size:26px; font-weight:900; color:#fff; cursor:pointer;
+    background:#e0455c; box-shadow:0 10px 0 rgba(0,0,0,.3); transition:background .1s; }
+  #target.go { background:#43c65a; }
+  #target:active { transform:translateY(4px); box-shadow:0 6px 0 rgba(0,0,0,.3); }
+  .round-info { text-align:center; font-size:18px; font-weight:700; opacity:.9; }
+  .bigms { text-align:center; font-size:52px; font-weight:900; margin:10px 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ SPLASH ============ -->
+<div class="screen opaque active" id="screen-splash">
+  <h1 class="title">🎯 Reflex</h1>
+  <p class="subtitle">gamekit demo — tap when it turns green!</p>
+  <div class="content" style="text-align:center">
+    <button class="btn green wide" onclick="Demo.play()">▶ Play</button>
+    <button class="btn blue wide" onclick="Demo.showLeaderboard()">🏆 High Scores</button>
+    <button class="btn grey wide" id="btn-install" style="display:none">📲 Add to Home Screen</button>
+    <p style="opacity:.6;font-size:13px;margin-top:14px"><span id="sync-badge">📴 local only</span></p>
+  </div>
+</div>
+
+<!-- ============ PROFILES ============ -->
+<div class="screen opaque" id="screen-profiles">
+  <div class="topbar">
+    <button class="iconbtn" onclick="GK.UI.showScreen('splash')">⬅</button>
+    <div class="grow"></div>
+    <button class="iconbtn btn-sound">🔊</button>
+  </div>
+  <h1 class="title" style="font-size:32px">Who's playing?</h1>
+  <div class="content"><div class="profile-list" id="profile-list"></div></div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div class="screen opaque" id="screen-game">
+  <div class="topbar">
+    <button class="iconbtn" onclick="Demo.play()">⬅</button>
+    <div class="grow"></div>
+    <button class="iconbtn btn-sound">🔊</button>
+  </div>
+  <div class="content">
+    <div class="round-info" id="round-info"></div>
+    <button id="target">wait…</button>
+    <div class="bigms" id="last-ms"></div>
+  </div>
+</div>
+
+<!-- ============ LEADERBOARD ============ -->
+<div class="screen opaque" id="screen-leaderboard">
+  <div class="topbar">
+    <button class="iconbtn" onclick="GK.UI.showScreen('splash')">⬅</button>
+    <div class="grow"></div>
+    <button class="iconbtn btn-sound">🔊</button>
+  </div>
+  <h1 class="title" style="font-size:32px">🏆 High Scores</h1>
+  <div class="content" id="lb-rows"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../gk/gk-util.js"></script>
+<script src="../gk/gk-audio.js"></script>
+<script src="../gk/gk-ui.js"></script>
+<script src="../gk/gk-storage.js"></script>
+<script src="../gk/gk-profiles.js"></script>
+<script src="../gk/gk-pwa.js"></script>
+
+<script>
+"use strict";
+
+/* ----- storage: local-only (pass a firebaseConfig to sync a real game) ----- */
+const Storage = GK.createStorage({
+  prefix: "gkdemo",
+  collection: "gkdemo",
+  firebaseConfig: null, // demo stays offline; games pass the family Firebase config
+  blankProgress: () => ({ bestMs: null, coins: 0, rounds: 0, updated: 0 }),
+  mergeProgress: (a, b) => ({
+    bestMs: a.bestMs == null ? b.bestMs : b.bestMs == null ? a.bestMs : Math.min(a.bestMs, b.bestMs),
+    coins: Math.max(a.coins || 0, b.coins || 0),
+    rounds: Math.max(a.rounds || 0, b.rounds || 0),
+  }),
+});
+
+/* ----- game-specific jingle on top of the kit defaults ----- */
+Object.assign(GK.Sfx, {
+  go() { this.tone({ freq: 880, type: "square", dur: 0.09, vol: 0.15 }); },
+});
+
+const ROUNDS = 5;
+
+const Demo = {
+  profile: null, progress: null,
+  state: "idle", // idle | wait | go
+  round: 0, times: [], t0: 0, timer: null,
+
+  play() {
+    GK.Sfx.init(); GK.Sfx.click();
+    GK.Profiles.renderList();
+    GK.UI.showScreen("profiles");
+  },
+
+  start(profile) {
+    this.profile = profile;
+    this.progress = Storage.getProgress(profile.id);
+    this.round = 0; this.times = [];
+    GK.UI.showScreen("game");
+    document.getElementById("last-ms").textContent = "";
+    this.nextRound();
+  },
+
+  nextRound() {
+    this.round++;
+    this.state = "wait";
+    const t = document.getElementById("target");
+    t.classList.remove("go"); t.textContent = "wait…";
+    document.getElementById("round-info").textContent = `Round ${this.round} / ${ROUNDS} — ${GK.util.esc(this.profile.name)}`;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.state = "go"; this.t0 = performance.now();
+      t.classList.add("go"); t.textContent = "TAP!";
+      GK.Sfx.go();
+    }, GK.util.rand(900, 2600));
+  },
+
+  tap() {
+    const t = document.getElementById("target");
+    if (this.state === "wait") { // too early!
+      GK.Sfx.wrong(); GK.UI.toast("Too early! 🙈");
+      clearTimeout(this.timer);
+      this.nextRound(); this.round--; // retry the same round
+      return;
+    }
+    if (this.state !== "go") return;
+    this.state = "idle";
+    const ms = Math.round(performance.now() - this.t0);
+    this.times.push(ms);
+    document.getElementById("last-ms").textContent = ms + " ms";
+    if (ms < 300) { this.progress.coins++; GK.Sfx.coin(); } else GK.Sfx.click();
+    if (this.round < ROUNDS) setTimeout(() => this.nextRound(), 700);
+    else this.finish();
+  },
+
+  finish() {
+    const avg = Math.round(this.times.reduce((s, v) => s + v, 0) / this.times.length);
+    const prevBest = this.progress.bestMs;
+    if (prevBest == null || avg < prevBest) { this.progress.bestMs = avg; GK.Sfx.win(); }
+    else GK.Sfx.lose();
+    this.progress.rounds += ROUNDS;
+    Storage.saveProgress(this.profile.id, this.progress);
+    GK.UI.toast(`Average ${avg} ms` + (this.progress.bestMs === avg ? " — new best! 🎉" : ""));
+    setTimeout(() => this.showLeaderboard(), 1400);
+  },
+
+  showLeaderboard() {
+    GK.Sfx.click();
+    GK.Profiles.renderLeaderboard("lb-rows", {
+      cols: r => `<span class="lb-stat">⚡ ${r.progress.bestMs == null ? "—" : r.progress.bestMs + " ms"}</span>
+                  <span class="lb-stat">🪙 ${r.progress.coins}</span>`,
+      sort: (a, b) => (a.progress.bestMs ?? 1e9) - (b.progress.bestMs ?? 1e9),
+      meId: this.profile?.id,
+      empty: "No players yet — tap Play!",
+    });
+    GK.UI.showScreen("leaderboard");
+  },
+};
+
+/* ----- wire the kit up ----- */
+GK.Profiles.init({
+  storage: Storage,
+  avatars: ["🦊", "🐼", "🦄", "🐸", "🐯", "🦁", "🐨", "🐷", "🦖", "🐙", "🦉", "🐔"],
+  meta: (p, prog) => `⚡ ${prog.bestMs == null ? "no score yet" : "best " + prog.bestMs + " ms"} · 🪙 ${prog.coins}`,
+  onEnter: (p) => Demo.start(p),
+  addLabel: "New Player",
+});
+
+GK.Sfx.enabled = Storage.getSettings().sound;
+GK.UI.bindSoundToggle(Storage);
+GK.initPWA({ appName: "Reflex" });
+document.getElementById("target").addEventListener("pointerdown", () => Demo.tap());
+window.Demo = Demo;
+</script>
+</body>
+</html>
