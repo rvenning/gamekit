@@ -19,6 +19,7 @@
   --gk-card:  rgba(255,255,255,.95);
   --gk-input-border: #d8dee4;
   --gk-key-bg: #f0f3f6;
+  --gk-key-sh: #d3dae0;   /* 3D under-shadow on PIN keys */
 }
 
 /* ---------- Screens ---------- */
@@ -95,16 +96,22 @@ h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25
 .row-btns2 { display:flex; gap:10px; margin-top:10px; }
 .row-btns2 .btn { flex:1; margin:0; }
 
-/* ---------- PIN keypad ---------- */
+/* ---------- PIN keypad (WordVoyage's original design, themed) ---------- */
 .pin-dots { display:flex; gap:14px; justify-content:center; margin:14px 0; }
-.pin-dots span { width:16px; height:16px; border-radius:50%; background:var(--gk-input-border); }
-.pin-dots span.on { background:var(--gk-accent); }
+.pin-dots span { width:18px; height:18px; border-radius:50%;
+                 background:var(--gk-key-bg); border:3px solid var(--gk-input-border);
+                 transition: transform .15s, background .15s; }
+.pin-dots span.on { background:var(--gk-accent); border-color:var(--gk-accent-sh);
+                    transform:scale(1.15); }
 .pin-dots.shake { animation: gk-shake .4s; }
 @keyframes gk-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-.pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:8px 0; }
-.pin-key { font-size:24px; font-weight:800; padding:16px 0; border:none; border-radius:14px;
-           background:var(--gk-key-bg); cursor:pointer; color:var(--gk-ink); }
-.pin-key.blank { background:transparent; cursor:default; }
+.pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; justify-items:center; margin:8px 0; }
+.pin-key { width:64px; height:56px; border:none; border-radius:16px; cursor:pointer;
+           font-family:inherit; font-size:1.4rem; font-weight:800; color:var(--gk-ink);
+           background:var(--gk-key-bg); box-shadow:0 3px 0 var(--gk-key-sh);
+           transition: transform .08s; }
+.pin-key:active { transform:translateY(2px); box-shadow:none; }
+.pin-key.blank { visibility:hidden; }
 
 /* ---------- Toast ---------- */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
@@ -116,7 +123,7 @@ h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25
 @media (pointer: coarse) {
   .iconbtn { width:54px; height:54px; font-size:24px; }
   .btn { padding:18px 24px; font-size:20px; }
-  .pin-key { padding:20px 0; font-size:26px; }
+  .pin-key { width:72px; height:62px; font-size:1.6rem; }
   .profile-card { padding:18px; }
   .profile-card .ppin, .profile-card .pdelete { font-size:24px; padding:10px; }
 }
