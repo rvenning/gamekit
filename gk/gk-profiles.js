@@ -62,6 +62,13 @@ GK.Profiles = {
     wrap.appendChild(add);
   },
 
+  // The profile last played on THIS device (storage settings), or null if it
+  // no longer exists. Splash screens use it for a one-tap "Continue as X".
+  lastProfile() {
+    const id = this.cfg.storage.getSettings().lastProfile;
+    return (id && this.cfg.storage.getProfiles().find(p => p.id === id)) || null;
+  },
+
   select(p) {
     GK.Sfx.click();
     if (p.pin) {

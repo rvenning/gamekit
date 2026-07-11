@@ -38,7 +38,9 @@
   <h1 class="title">🎯 Reflex</h1>
   <p class="subtitle">gamekit demo — tap when it turns green!</p>
   <div class="content" style="text-align:center">
-    <button class="btn green wide" onclick="Demo.play()">▶ Play</button>
+    <!-- shown when this device has a last player: one-tap continue -->
+    <button class="btn green wide" id="btn-continue-as" style="display:none"></button>
+    <button class="btn green wide" id="btn-play" onclick="Demo.play()">▶ Play</button>
     <button class="btn blue wide" onclick="Demo.showLeaderboard()">🏆 High Scores</button>
     <button class="btn grey wide" id="btn-install" style="display:none">📲 Add to Home Screen</button>
     <p style="opacity:.6;font-size:13px;margin-top:14px"><span id="sync-badge">📴 local only</span></p>
@@ -201,6 +203,24 @@ GK.Profiles.init({
 GK.Sfx.enabled = Storage.getSettings().sound;
 GK.UI.bindSoundToggle(Storage);
 GK.initPWA({ appName: "Reflex" });
+
+// one-tap continue for this device's last player (GK.Profiles.lastProfile)
+function refreshSplash() {
+  const last = GK.Profiles.lastProfile();
+  const cont = document.getElementById("btn-continue-as");
+  const play = document.getElementById("btn-play");
+  if (last) {
+    cont.style.display = "";
+    cont.textContent = `▶ Continue as ${last.avatar} ${last.name}`;
+    cont.onclick = () => { GK.Sfx.init(); GK.Profiles.select(last); };
+    play.className = "btn blue wide"; play.textContent = "👥 Switch Player";
+  } else {
+    cont.style.display = "none";
+    play.className = "btn green wide"; play.textContent = "▶ Play";
+  }
+}
+refreshSplash();
+GK.UI.onScreenChange = (n) => { if (n === "splash") refreshSplash(); };
 document.getElementById("target").addEventListener("pointerdown", () => Demo.tap());
 window.Demo = Demo;
 </script>
