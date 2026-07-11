@@ -18,15 +18,23 @@
 // configured and reachable, profiles + progress are mirrored to Firestore so
 // the family shares one roster and leaderboard across devices. Deletions
 // write tombstone docs so a stale device can't resurrect a removed profile.
+//
+// Progress pushes are debounced (localStorage stays immediate): games save on
+// every coin/word, which would otherwise mean one Firestore write per pickup
+// mid-gameplay. Pending pushes flush after PUSH_DELAY, and immediately when
+// the tab is hidden or closed.
 window.GK = window.GK || {};
 
 GK.createStorage = function (cfg) {
   const P = cfg.prefix + "_";
   const COL = cfg.collection;
+  const PUSH_DELAY = 3000; // ms of quiet before pending progress hits Firestore
 
   return {
     fb: null,      // { db, doc, setDoc, ... } once Firestore is live
     online: false,
+    _pending: {},     // pid -> progress awaiting a debounced Firestore push
+    _pushTimer: null,
 
     _get(k, f) { try { const v = JSON.parse(localStorage.getItem(P + k)); return v ?? f; } catch { return f; } },
     _set(k, v) { try { localStorage.setItem(P + k, JSON.stringify(v)); } catch {} },
@@ -60,6 +68,7 @@ GK.createStorage = function (cfg) {
     deleteProfile(id) {
       this.saveProfiles(this.getProfiles().filter(p => p.id !== id));
       this._remove("progress_" + id);
+      delete this._pending[id]; // a queued push must not resurrect the doc
       this._set("deleted", [...new Set([...this._get("deleted", []), id])]);
       const s = this.getSettings();
       if (s.lastProfile === id) { s.lastProfile = null; this.saveSettings(s); }
@@ -95,6 +104,12 @@ GK.createStorage = function (cfg) {
         this.fb = { db: fsMod.getFirestore(app), ...fsMod };
         await this._syncDown();
         this.online = true;
+        // Don't let a debounced push die with the tab: flush the moment the
+        // page is hidden (locking, app-switching) or being unloaded.
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") this.flushProgress();
+        });
+        window.addEventListener("pagehide", () => this.flushProgress());
         return true;
       } catch (e) {
         console.warn("Firebase unavailable, running on localStorage only:", e);
@@ -166,10 +181,26 @@ GK.createStorage = function (cfg) {
       setDoc(doc(db, COL, "profile_" + p.id), p).catch(e => console.warn("sync profile failed", e));
     },
 
+    // Debounced: progress lands in localStorage instantly (saveProgress), but
+    // Firestore only sees it after PUSH_DELAY of quiet — so a run that banks a
+    // coin per second costs one write, not hundreds.
     _pushProgress(pid, progress) {
       if (!this.fb) return;
+      this._pending[pid] = progress;
+      if (!this._pushTimer) this._pushTimer = setTimeout(() => this.flushProgress(), PUSH_DELAY);
+    },
+
+    // Push everything pending to Firestore now. Safe to call any time.
+    flushProgress() {
+      clearTimeout(this._pushTimer);
+      this._pushTimer = null;
+      const pending = this._pending;
+      this._pending = {};
+      if (!this.fb) return;
       const { db, doc, setDoc } = this.fb;
-      setDoc(doc(db, COL, "progress_" + pid), progress).catch(e => console.warn("sync progress failed", e));
+      for (const [pid, progress] of Object.entries(pending)) {
+        setDoc(doc(db, COL, "progress_" + pid), progress).catch(e => console.warn("sync progress failed", e));
+      }
     },
   };
 };
