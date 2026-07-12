@@ -101,6 +101,24 @@ New-game checklist:
 Rules are open read/write per game collection — accepted trade-off for passwordless
 family profiles (no sensitive data, low stakes).
 
+## Tests
+
+Data-safety tests for the persistence/sync core (`gk-storage.js`) — the code
+whose bugs would silently corrupt the kids' saved progress. No framework, just
+Node's built-in runner:
+
+```
+cd gamekit && node --test        # or: npm test
+```
+
+`tests/storage.test.js` loads the real gk-* scripts in a `vm` sandbox with a
+fake `localStorage` and a mock Firestore, and covers: tombstoned deletes (a
+removed profile can't be resurrected by a stale device or a queued push), the
+cross-device progress merge (keeps the best of each field, never drops an
+unknown key), the newer-profile-wins rule, and the debounced write path (saves
+coalesce and flush). The `mergeProgress` contract test also pins the "preserve
+unknown keys" rule and the score-season (`sver`) reset pattern.
+
 ## Conventions the kit assumes
 
 - Screens: `<div class="screen" id="screen-NAME">`, one `.active`
