@@ -17,6 +17,7 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-storage.js` | `GK.createStorage(cfg)` — localStorage persistence + optional Firestore family sync (profiles, progress, tombstoned deletes; progress writes debounced, flushed on tab hide/close) |
 | `gk/gk-profiles.js` | `GK.Profiles` — emoji-avatar roster, 4-digit PINs with admin override, type-name delete, leaderboard renderer; injects its own modals |
 | `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS) |
+| `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
 | `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties |
 | `sw-template.js` | network-first service worker — copy to the game, set cache name + shell list |
 | `manifest-template.json` | PWA manifest starter |
@@ -98,8 +99,28 @@ New-game checklist:
 - `progress_<id>` — game-defined shape; must contain `updated`
 - `deleted_<id>` — tombstone so removed profiles can't be resurrected by stale devices
 
-Rules are open read/write per game collection — accepted trade-off for passwordless
-family profiles (no sensitive data, low stakes).
+### Auth
+
+`gk-storage.js` signs in **anonymously** on boot, before touching Firestore, and
+the rules require `request.auth != null`. The Firebase config is public in every
+page load, so open rules meant anyone who viewed source could read or wipe the
+family's progress. The anonymous uid is per-device and identifies nobody — it is
+a gate against drive-by scripts, not an account, and players see no sign-in.
+
+Sign-in failure is deliberately **not** fatal: if the Anonymous provider is ever
+turned off, games log a warning and carry on, and it is the rules that decide
+whether they can still sync.
+
+The intended rules live in [`firestore.rules`](firestore.rules). That file is
+documentation, not deployment — apply it in the Firebase console (Firestore
+Database → Rules) or via `firebase deploy --only firestore:rules`.
+
+**Rollout order matters.** Applying the rules before every game ships a build
+with anonymous auth will silently drop those games to localStorage-only:
+
+1. Enable Authentication → Sign-in method → **Anonymous** in the console.
+2. Ship gamekit ≥ 1.3.0 to every game (re-vendor, deploy).
+3. Only then apply the rules.
 
 ## Tests
 

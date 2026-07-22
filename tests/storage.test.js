@@ -103,6 +103,44 @@ test("deleteProfile wipes progress and records a tombstone", () => {
   assert.ok(S._get("deleted", []).includes(p.id), "tombstone recorded locally");
 });
 
+// Anonymous auth gates Firestore access once the rules require request.auth.
+// The rollout is code-first, rules-second, so the failure path matters as much
+// as the success path: a build that hard-failed when the Anonymous provider
+// wasn't enabled yet would take every game offline the moment it shipped.
+function makeAuthMod({ fail = false, uid = "anon-123" } = {}) {
+  return {
+    getAuth: () => ({ currentUser: fail ? null : { uid } }),
+    signInAnonymously: async () => {
+      if (fail) { const e = new Error("auth/operation-not-allowed"); e.code = "auth/operation-not-allowed"; throw e; }
+      return { user: { uid } };
+    },
+  };
+}
+
+test("anonymous sign-in records the uid", async () => {
+  const S = loadGamekit().createStorage(makeConfig());
+  const ok = await S.signInAnon(makeAuthMod(), {});
+  assert.equal(ok, true);
+  assert.equal(S.authed, true);
+  assert.equal(S.uid, "anon-123");
+});
+
+test("a disabled Anonymous provider must not throw — sync degrades, it doesn't crash", async () => {
+  const S = loadGamekit().createStorage(makeConfig());
+  const warnings = [];
+  const realWarn = console.warn;
+  console.warn = (...a) => warnings.push(a.join(" "));
+  let threw = null;
+  try { await S.signInAnon(makeAuthMod({ fail: true }), {}); }
+  catch (e) { threw = e; }
+  finally { console.warn = realWarn; }
+
+  assert.equal(threw, null, "sign-in failure must be swallowed, not propagated");
+  assert.equal(S.authed, false);
+  assert.equal(S.uid, null);
+  assert.ok(warnings.some(w => w.includes("anonymous auth unavailable")), "and it should say so loudly");
+});
+
 test("a stale remote cannot resurrect a deleted profile", async () => {
   const S = loadGamekit().createStorage(makeConfig());
   const p = S.addProfile("Isabelle", "🦄", null);
