@@ -1,6 +1,6 @@
 {
   "name": "gamekit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Shared components for Robert's family browser games (no build step; plain scripts on a GK global).",
   "scripts": {

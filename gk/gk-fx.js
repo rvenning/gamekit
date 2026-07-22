@@ -98,7 +98,9 @@ GK.Fx = {
         color: colors[Math.floor(Math.random() * colors.length)],
         size: 5 + Math.random() * 5, grav: 420,
         spin: -8 + Math.random() * 16, a: Math.random() * 6,
-        shape: "rect", maxY: h + 30 });
+        // Confetti holds full colour and only fades as it runs out, so a long
+        // shower doesn't spend its whole life looking half transparent.
+        shape: "rect", fadeLate: true, maxY: h + 30 });
     }
     this.trim();
   },
@@ -162,7 +164,7 @@ GK.Fx = {
     const shape = this.cfg.shape;
     for (const p of this.parts) {
       const k = 1 - p.t / p.life;
-      ctx.globalAlpha = k;
+      ctx.globalAlpha = p.fadeLate ? Math.min(1, p.life - p.t) : k;
       ctx.fillStyle = p.color;
       const s = p.size * (p.fadeOnly ? k : 1);
       if (p.spark) { ctx.fillRect(p.x - s / 2, p.y - s * 1.5, s * 0.7, s * 3); continue; }

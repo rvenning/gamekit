@@ -34,12 +34,14 @@ function loadFx() {
 // without a canvas.
 function makeCtx() {
   const calls = [];
+  // Alpha is recorded at draw time: render() resets globalAlpha to 1 when it
+  // finishes, so reading it afterwards would tell us nothing.
   const ctx = {
     globalAlpha: 1, fillStyle: "", strokeStyle: "", lineWidth: 0, font: "",
     textAlign: "", textBaseline: "",
-    fillRect: (...a) => calls.push(["fillRect", ...a]),
-    arc: (...a) => calls.push(["arc", ...a]),
-    fillText: (...a) => calls.push(["fillText", ...a]),
+    fillRect: (...a) => calls.push(["fillRect", ctx.globalAlpha, ...a]),
+    arc: (...a) => calls.push(["arc", ctx.globalAlpha, ...a]),
+    fillText: (...a) => calls.push(["fillText", ctx.globalAlpha, ...a]),
     beginPath() {}, fill() {}, stroke() {}, moveTo() {}, lineTo() {},
     save() {}, restore() {}, translate() {}, rotate() {},
   };
@@ -116,6 +118,18 @@ test("confetti tumbles and is culled below the canvas", () => {
   assert.notEqual(Fx.parts[0].a, a0, "confetti should spin");
   run(Fx, 3);
   assert.equal(Fx.parts.length, 0, "confetti should be culled past the bottom edge");
+});
+
+test("confetti holds its colour and only fades as it runs out", () => {
+  const { Fx } = loadFx();
+  Fx.reset();
+  Fx.confetti(300, 5000, ["#f00"], 1);   // tall canvas so it isn't culled
+  const p = Fx.parts[0];
+  p.life = 2; p.t = 0;
+  const alphaAt = (t) => { p.t = t; const c = makeCtx(); Fx.render(c); return c.calls[0][1]; };
+  // a linear fade would already be at 0.75 here; late fade should still be solid
+  assert.equal(alphaAt(0.5), 1, "confetti should stay solid while it has time left");
+  assert.ok(Math.abs(alphaAt(1.5) - 0.5) < 1e-9, "and fade over its final second");
 });
 
 test("per-game tuning changes gravity, shape and burst defaults", () => {
