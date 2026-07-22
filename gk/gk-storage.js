@@ -33,6 +33,8 @@ GK.createStorage = function (cfg) {
   return {
     fb: null,      // { db, doc, setDoc, ... } once Firestore is live
     online: false,
+    uid: null,     // anonymous auth uid, once signed in
+    authed: false,
     _pending: {},     // pid -> progress awaiting a debounced Firestore push
     _pushTimer: null,
 
@@ -100,7 +102,9 @@ GK.createStorage = function (cfg) {
       try {
         const appMod = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js");
         const fsMod = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+        const authMod = await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js");
         const app = appMod.initializeApp(cfg.firebaseConfig);
+        await this.signInAnon(authMod, app);
         this.fb = { db: fsMod.getFirestore(app), ...fsMod };
         await this._syncDown();
         this.online = true;
@@ -116,6 +120,31 @@ GK.createStorage = function (cfg) {
         this.fb = null;
         return false;
       }
+    },
+
+    // The Firebase config ships in every page load, so rules that allow
+    // unauthenticated writes let anyone who views source wipe the family's
+    // saves. The rules require request.auth != null; signing in anonymously
+    // satisfies that without asking a five-year-old to log in anywhere. The
+    // uid is per-device and per-browser, so it identifies nobody -- it is a
+    // gate against drive-by scripts, not an account.
+    //
+    // Failure here is deliberately NOT fatal. If the Anonymous provider hasn't
+    // been enabled in the console yet, carry on and let the rules decide:
+    // throwing would take every game offline the moment this shipped, before
+    // the console side was in place.
+    async signInAnon(authMod, app) {
+      try {
+        const auth = authMod.getAuth(app);
+        const cred = await authMod.signInAnonymously(auth);
+        this.uid = (cred && cred.user && cred.user.uid) || (auth.currentUser && auth.currentUser.uid) || null;
+        this.authed = !!this.uid;
+      } catch (e) {
+        this.uid = null;
+        this.authed = false;
+        console.warn("gamekit: anonymous auth unavailable, continuing unauthenticated:", (e && e.code) || e);
+      }
+      return this.authed;
     },
 
     async _syncDown() {
