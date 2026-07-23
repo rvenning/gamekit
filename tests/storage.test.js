@@ -13,39 +13,16 @@
 
 const { test } = require("node:test");
 const assert = require("node:assert");
-const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
+const { loadScripts } = require("../tools/test-harness.js");
 
 const GK_DIR = path.join(__dirname, "..", "gk");
 
-function makeLocalStorage() {
-  const m = new Map();
-  return {
-    getItem: (k) => (m.has(k) ? m.get(k) : null),
-    setItem: (k, v) => m.set(k, String(v)),
-    removeItem: (k) => m.delete(k),
-    clear: () => m.clear(),
-  };
-}
-
-// Fresh sandbox per call so tests don't share GK state or localStorage.
+// Fresh sandbox per call so tests don't share GK state or localStorage. The
+// browser sandbox supplies window/localStorage/document and an unref'd
+// setTimeout, so a pending 3s debounce timer can't keep `node --test` alive.
 function loadGamekit() {
-  const sandbox = {
-    console,
-    // unref so a pending 3s debounce timer can't keep `node --test` alive
-    setTimeout: (fn, ms) => { const t = setTimeout(fn, ms); if (t.unref) t.unref(); return t; },
-    clearTimeout,
-    localStorage: makeLocalStorage(),
-    document: { addEventListener() {}, visibilityState: "visible" },
-  };
-  sandbox.window = sandbox;
-  sandbox.addEventListener = () => {};
-  vm.createContext(sandbox);
-  for (const f of ["gk-util.js", "gk-storage.js"]) {
-    vm.runInContext(fs.readFileSync(path.join(GK_DIR, f), "utf8"), sandbox, { filename: f });
-  }
-  return sandbox.GK;
+  return loadScripts({ baseDir: GK_DIR, files: ["gk-util.js", "gk-storage.js"], browser: true }).GK;
 }
 
 // The contract every game's merge should follow: keep the best of each numeric

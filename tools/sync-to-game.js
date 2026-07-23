@@ -31,8 +31,12 @@ for (const f of fs.readdirSync(path.join(root, "gk"))) {
   fs.copyFileSync(path.join(root, "gk", f), path.join(libDir, f));
   copied.push("lib/" + f);
 }
-fs.copyFileSync(path.join(root, "tools", "png.js"), path.join(libDir, "tools", "png.js"));
-copied.push("lib/tools/png.js");
+// Vendored dev tools (not runtime, not in the SW shell): the PNG icon painter
+// and the node --test harness. A game's tests require the harness from here.
+for (const tool of ["png.js", "test-harness.js"]) {
+  fs.copyFileSync(path.join(root, "tools", tool), path.join(libDir, "tools", tool));
+  copied.push("lib/tools/" + tool);
+}
 
 const version = fs.readFileSync(path.join(root, "VERSION"), "utf8").trim();
 let commit = "unknown";

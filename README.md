@@ -140,6 +140,13 @@ unknown key), the newer-profile-wins rule, and the debounced write path (saves
 coalesce and flush). The `mergeProgress` contract test also pins the "preserve
 unknown keys" rule and the score-season (`sver`) reset pattern.
 
+The games have no build step, so their tests load plain browser scripts via
+`tools/test-harness.js` (`loadScripts` — vendored into each game at
+`lib/tools/test-harness.js`). See [`docs/testing.md`](docs/testing.md) for the
+harness, the data-linter pattern (including reachability BFS), and the headless
+balance-bot pattern — the checks that catch "shipped but unfinishable / not
+fun" before a game reaches the kids.
+
 ## Conventions the kit assumes
 
 - Screens: `<div class="screen" id="screen-NAME">`, one `.active`
