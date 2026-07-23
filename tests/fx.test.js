@@ -13,21 +13,14 @@
 
 const { test } = require("node:test");
 const assert = require("node:assert");
-const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
+const { loadScripts } = require("../tools/test-harness.js");
 
 const GK_DIR = path.join(__dirname, "..", "gk");
 
 // Fresh sandbox per call so tests never share Fx state or config.
 function loadFx() {
-  const sandbox = { console };
-  sandbox.window = sandbox;
-  vm.createContext(sandbox);
-  for (const f of ["gk-util.js", "gk-fx.js"]) {
-    vm.runInContext(fs.readFileSync(path.join(GK_DIR, f), "utf8"), sandbox, { filename: f });
-  }
-  return sandbox.GK;
+  return loadScripts({ baseDir: GK_DIR, files: ["gk-util.js", "gk-fx.js"], browser: true }).GK;
 }
 
 // Records the calls a render pass makes, so we can assert on shape choice
