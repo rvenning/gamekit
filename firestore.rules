@@ -3,7 +3,8 @@ rules_version = '2';
 // Firestore rules for the family games (project wordvoyage-e5a5c).
 //
 // Every game vendors gamekit and syncs to its own top-level collection:
-//   wordvoyage · chickencross · blockparty · biblequest · brickbreaker · deepjungle
+//   wordvoyage · chickencross · blockparty · biblequest · brickbreaker ·
+//   deepjungle · alienchomp
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
 // These rules are NOT applied by deploying this repo -- paste them into the
@@ -44,7 +45,8 @@ service cloud.firestore {
     match /{collection}/{document} {
       allow read, write: if request.auth != null
         && collection in ["wordvoyage", "chickencross", "blockparty",
-                          "biblequest", "brickbreaker", "deepjungle"];
+                          "biblequest", "brickbreaker", "deepjungle",
+                          "alienchomp"];
     }
   }
 }
