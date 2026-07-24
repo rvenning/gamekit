@@ -119,8 +119,12 @@ actually plays the level to the end.
 
 ### Keeping it deterministic
 
-- Seed or stub anything random (`Math.random`, power-up drops) so a failure
-  reproduces. `matchMedia`/timers are already inert under the harness.
+- Seed anything random so a failure reproduces. `GK.util.seededRand(seed)` is
+  a mulberry32 stream that never touches `Math.random`, with `.int()`,
+  `.range()`, `.pick()` and `.shuffle()` hung off it — have the game draw from
+  an injected rng rather than `Math.random` and a bot run becomes replayable.
+  `GK.util.seedFrom("2026-07-23")` turns a date (or any string) into a seed.
+  `matchMedia`/timers are already inert under the harness.
 - Feed a **fixed timestep** (`1/60`), not wall-clock, so the sim is
   frame-rate-independent and fast.
 - Pass a throwaway in-memory profile and stub persistence — a balance run must
