@@ -18,6 +18,7 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-profiles.js` | `GK.Profiles` — emoji-avatar roster, 4-digit PINs with admin override, type-name delete, leaderboard renderer; injects its own modals |
 | `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS) |
 | `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
+| `gk/gk-debug.js` | `GK.Debug` — dev tools behind `?debug=1`: floating panel, FPS, `toggle`/`action`/`jump` controls games register themselves. **Suppresses progress writes while on** |
 | `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties |
 | `sw-template.js` | network-first service worker — copy to the game, set cache name + shell list |
 | `manifest-template.json` | PWA manifest starter |
@@ -139,6 +140,25 @@ cross-device progress merge (keeps the best of each field, never drops an
 unknown key), the newer-profile-wins rule, and the debounced write path (saves
 coalesce and flush). The `mergeProgress` contract test also pins the "preserve
 unknown keys" rule and the score-season (`sver`) reset pattern.
+
+### Debug mode
+
+Open any game with `?debug=1` for the dev panel (`gk-debug.js`): FPS, plus
+whatever toggles, actions and level-jumps that game registers. A normal player
+URL has no query string, so none of it runs.
+
+**Debug mode never writes progress.** Jumping levels or switching on
+invincibility would otherwise persist, and because family sync merges by MAX an
+inflated score is permanent on every device. Debug is an inspection mode — look
+at anything, change nothing. Pass the storage object so the kit can enforce it:
+
+```js
+GK.Debug.init({ storage: Storage });
+GK.Debug.toggle("hitboxes", "hitboxes");
+GK.Debug.jump("level", LEVELS.length, (n) => App.startLevel(n - 1));
+// game loop:  GK.Debug.frame(dt);
+// renderer:   if (GK.Debug.flag("hitboxes")) drawBoxes();
+```
 
 The games have no build step, so their tests load plain browser scripts via
 `tools/test-harness.js` (`loadScripts` — vendored into each game at
