@@ -4,15 +4,24 @@
 // config object).
 //
 //   const Storage = GK.createStorage({
-//     prefix: "cc",                    // localStorage keys: cc_settings, cc_profiles,
-//                                      // cc_progress_<id>, cc_deleted
-//     collection: "chickencross",      // Firestore collection (docs profile_<id>,
+//     prefix: "mygame",                // localStorage keys: mygame_settings,
+//                                      // mygame_profiles, mygame_progress_<id>,
+//                                      // mygame_deleted
+//     collection: "mygame",            // Firestore collection (docs profile_<id>,
 //                                      // progress_<id>, deleted_<id>)
 //     firebaseConfig: {...} | null,    // null = localStorage only
 //     blankProgress: () => ({ coins:0, levels:{}, updated:0 }),
 //     mergeProgress: (a, b) => ({...}) // cross-device merge; must be commutative-ish:
 //                                      // keep the best of both sides
 //   });
+//
+// THE PREFIX MUST BE UNIQUE ACROSS EVERY FAMILY GAME. They are all served from
+// https://rvenning.github.io and localStorage is scoped to the ORIGIN, not the
+// path, so two games sharing a prefix share one profile roster and one set of
+// progress keys — and the second one played overwrites the first one's saves.
+// (This comment used to show "cc"/"chickencross", real values from a shipped
+// game, and a later game copied them.) tests/prefixes.test.js fails the build
+// if two sibling games ever collide.
 //
 // localStorage is the always-available source of truth; when Firebase is
 // configured and reachable, profiles + progress are mirrored to Firestore so
