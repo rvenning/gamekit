@@ -4,7 +4,7 @@ rules_version = '2';
 //
 // Every game vendors gamekit and syncs to its own top-level collection:
 //   wordvoyage · chickencross · blockparty · biblequest · brickbreaker ·
-//   deepjungle · alienchomp · beatbugs · reelrush
+//   deepjungle · alienchomp · beatbugs · reelrush · critterclash · wordsiege
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
 // These rules are NOT applied by deploying this repo -- paste them into the
@@ -46,7 +46,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && collection in ["wordvoyage", "chickencross", "blockparty",
                           "biblequest", "brickbreaker", "deepjungle",
-                          "alienchomp", "beatbugs", "reelrush"];
+                          "alienchomp", "beatbugs", "reelrush",
+                          "critterclash", "wordsiege"];
     }
   }
 }
