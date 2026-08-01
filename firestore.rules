@@ -49,7 +49,7 @@ service cloud.firestore {
                           "biblequest", "brickbreaker", "deepjungle",
                           "alienchomp", "beatbugs", "reelrush",
                           "critterclash", "wordsiege", "sortingoffice",
-                          "turrettown"];
+                          "turrettown", "ricochetspire"];
     }
   }
 }
