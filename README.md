@@ -19,6 +19,7 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS) |
 | `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
 | `gk/gk-debug.js` | `GK.Debug` — dev tools behind `?debug=1`: floating panel, FPS, `toggle`/`action`/`jump` controls games register themselves. **Suppresses progress writes while on** |
+| `gk/gk-path.js` | `GK.Route` + `GK.Corridor` — levels authored as **waypoints** instead of tile maps, plus the linters that keep them honest. A route is a polyline you walk by distance (Turret Town's roads); a corridor is a centre-line-and-width profile you sample across (Rocket Rescue's caves), with `place(x, t)` for positioning content by a fraction of the passage so it can never land inside solid geometry |
 | `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties |
 | `sw-template.js` | network-first service worker — copy to the game, set cache name + shell list |
 | `manifest-template.json` | PWA manifest starter |
