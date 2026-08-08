@@ -6,7 +6,7 @@ rules_version = '2';
 //   wordvoyage · chickencross · blockparty · biblequest · brickbreaker ·
 //   deepjungle · alienchomp · beatbugs · reelrush · critterclash · wordsiege ·
 //   sortingoffice · turrettown · ricochetspire · rocketrescue ·
-//   scribblespeedway
+//   scribblespeedway · canarydeep
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
 // These rules are NOT applied by deploying this repo -- paste them into the
@@ -51,7 +51,7 @@ service cloud.firestore {
                           "alienchomp", "beatbugs", "reelrush",
                           "critterclash", "wordsiege", "sortingoffice",
                           "turrettown", "ricochetspire", "rocketrescue",
-                          "scribblespeedway"];
+                          "scribblespeedway", "canarydeep"];
     }
   }
 }
