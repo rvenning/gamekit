@@ -42,12 +42,15 @@ GK.Profiles = {
       const d = document.createElement("div");
       d.className = "profile-card";
       d.setAttribute("role", "button");
+      // Label the card explicitly: a name computed from its contents would fold
+      // in the nested PIN/delete buttons and read as one unusable string.
+      d.setAttribute("aria-label", `Play as ${p.name}`);
       d.innerHTML = `<span class="avatar">${p.avatar}</span>
         <span class="pname">${this.esc(p.name)}</span>
         <span class="pmeta">${meta(p, prog)}</span>
         <span class="row-btns">
-          <button class="ppin" title="${p.pin ? "PIN protected" : "Set a PIN"}">${p.pin ? "🔒" : "🔓"}</button>
-          <button class="pdelete" title="Delete profile">🗑️</button>
+          <button class="ppin" aria-label="${p.pin ? "Change" : "Set a"} PIN for ${this.esc(p.name)}" title="${p.pin ? "PIN protected" : "Set a PIN"}">${p.pin ? "🔒" : "🔓"}</button>
+          <button class="pdelete" aria-label="Delete ${this.esc(p.name)}" title="Delete profile">🗑️</button>
         </span>`;
       d.onclick = () => this.select(p);
       d.querySelector(".pdelete").onclick = (e) => this.askDelete(p, e);
@@ -57,6 +60,7 @@ GK.Profiles = {
     const add = document.createElement("div");
     add.className = "profile-card add";
     add.setAttribute("role", "button");
+    add.setAttribute("aria-label", this.cfg.addLabel);
     add.innerHTML = `<span class="avatar">➕</span><span class="pname">${this.esc(this.cfg.addLabel)}</span>`;
     add.onclick = () => this.showNew();
     wrap.appendChild(add);
@@ -96,9 +100,17 @@ GK.Profiles = {
       const b = document.createElement("button");
       b.className = "avatar-choice" + (i === 0 ? " selected" : "");
       b.textContent = a;
+      // The emoji carries no accessible name of its own, and "selected" is a
+      // class a reader can't see — so state the position and the toggle state.
+      b.setAttribute("aria-label", `Avatar ${i + 1}`);
+      b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
       b.onclick = () => {
-        grid.querySelectorAll(".selected").forEach(n => n.classList.remove("selected"));
+        grid.querySelectorAll(".selected").forEach(n => {
+          n.classList.remove("selected");
+          n.setAttribute("aria-pressed", "false");
+        });
         b.classList.add("selected");
+        b.setAttribute("aria-pressed", "true");
         GK.Sfx.click();
       };
       grid.appendChild(b);
@@ -168,7 +180,16 @@ GK.Profiles = {
         const b = document.createElement("button");
         b.className = "pin-key" + (k === "" ? " blank" : "");
         b.textContent = k;
-        if (k !== "") b.onclick = () => this._pinKey(k);
+        if (k === "") {
+          // A grid spacer, not a key: keep it out of the tab order and the
+          // accessibility tree rather than exposing an unnamed button.
+          b.disabled = true;
+          b.tabIndex = -1;
+          b.setAttribute("aria-hidden", "true");
+        } else {
+          if (k === "⌫") b.setAttribute("aria-label", "Backspace");
+          b.onclick = () => this._pinKey(k);
+        }
         pad.appendChild(b);
       }
     }
