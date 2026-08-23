@@ -7,7 +7,7 @@ rules_version = '2';
 //   deepjungle · alienchomp · beatbugs · reelrush · critterclash · wordsiege ·
 //   sortingoffice · turrettown · ricochetspire · rocketrescue ·
 //   scribblespeedway · canarydeep · numberninja · wondermuseum · bubblebrew ·
-//   cookiecrumble
+//   cookiecrumble · updraft
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
 // These rules are NOT applied by deploying this repo -- paste them into the
@@ -53,7 +53,8 @@ service cloud.firestore {
                           "critterclash", "wordsiege", "sortingoffice",
                           "turrettown", "ricochetspire", "rocketrescue",
                           "scribblespeedway", "canarydeep", "numberninja",
-                          "wondermuseum", "bubblebrew", "cookiecrumble"];
+                          "wondermuseum", "bubblebrew", "cookiecrumble",
+                          "updraft"];
     }
   }
 }
