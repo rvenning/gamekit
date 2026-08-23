@@ -123,4 +123,98 @@ function downsample(src, srcSize, factor) {
   return out;
 }
 
-module.exports = { encodePNG, makeCanvas, downsample };
+/* ---------------------------------------------------------- PNG decoding */
+// The mirror of encodePNG: takes a PNG buffer and hands back straight RGBA.
+// Written for the print-and-play map extractor, which has to read the printed
+// gamesheets cell by cell and has no business pulling in a native image
+// library to do it. Handles what the sheets actually are -- 8-bit truecolour
+// and truecolour-alpha, greyscale, and palette -- and refuses anything else
+// loudly rather than returning quiet nonsense.
+//
+//   const { decodePNG } = require("./png.js");
+//   const { width, height, rgba } = decodePNG(fs.readFileSync("sheet.png"));
+//   const i = (y * width + x) * 4;   // rgba[i], rgba[i+1], rgba[i+2], rgba[i+3]
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+function paeth(a, b, c) {
+  const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+  return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+}
+
+function decodePNG(buf) {
+  if (!buf.subarray(0, 8).equals(PNG_MAGIC)) throw new Error("not a PNG");
+
+  let head = null, palette = null, trns = null;
+  const idat = [];
+  for (let p = 8; p + 8 <= buf.length; ) {
+    const len = buf.readUInt32BE(p);
+    const type = buf.toString("ascii", p + 4, p + 8);
+    const data = buf.subarray(p + 8, p + 8 + len);
+    if (type === "IHDR") {
+      head = {
+        width: data.readUInt32BE(0), height: data.readUInt32BE(4),
+        depth: data[8], colorType: data[9], interlace: data[12],
+      };
+    } else if (type === "PLTE") palette = Buffer.from(data);
+    else if (type === "tRNS") trns = Buffer.from(data);
+    else if (type === "IDAT") idat.push(Buffer.from(data));
+    else if (type === "IEND") break;
+    p += 12 + len;
+  }
+  if (!head) throw new Error("PNG has no IHDR");
+  const { width, height, depth, colorType, interlace } = head;
+  if (depth !== 8) throw new Error("only 8-bit PNGs are supported, got " + depth + "-bit");
+  if (interlace) throw new Error("interlaced PNGs are not supported");
+
+  // Channels per pixel in the *stored* image, before palette expansion.
+  const CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+  const ch = CHANNELS[colorType];
+  if (!ch) throw new Error("unsupported PNG colour type " + colorType);
+  if (colorType === 3 && !palette) throw new Error("indexed PNG has no palette");
+
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const stride = width * ch;
+  if (raw.length < height * (stride + 1)) throw new Error("PNG pixel data is short");
+
+  // Un-filter in place: every scanline is prefixed with its filter type and
+  // refers back to the already-reconstructed bytes to its left and above.
+  const flat = Buffer.alloc(height * stride);
+  for (let y = 0, src = 0; y < height; y++) {
+    const filter = raw[src++];
+    const line = raw.subarray(src, src + stride); src += stride;
+    const cur = flat.subarray(y * stride, (y + 1) * stride);
+    const prev = y ? flat.subarray((y - 1) * stride, y * stride) : null;
+    for (let x = 0; x < stride; x++) {
+      const a = x >= ch ? cur[x - ch] : 0;
+      const b = prev ? prev[x] : 0;
+      const c = prev && x >= ch ? prev[x - ch] : 0;
+      let v = line[x];
+      if (filter === 1) v += a;
+      else if (filter === 2) v += b;
+      else if (filter === 3) v += (a + b) >> 1;
+      else if (filter === 4) v += paeth(a, b, c);
+      else if (filter !== 0) throw new Error("bad PNG filter " + filter + " on row " + y);
+      cur[x] = v & 255;
+    }
+  }
+
+  const rgba = Buffer.alloc(width * height * 4);
+  for (let i = 0, o = 0; i < width * height; i++, o += 4) {
+    const s = i * ch;
+    if (colorType === 2 || colorType === 6) {
+      rgba[o] = flat[s]; rgba[o + 1] = flat[s + 1]; rgba[o + 2] = flat[s + 2];
+      rgba[o + 3] = colorType === 6 ? flat[s + 3] : 255;
+    } else if (colorType === 0 || colorType === 4) {
+      const g = flat[s];
+      rgba[o] = g; rgba[o + 1] = g; rgba[o + 2] = g;
+      rgba[o + 3] = colorType === 4 ? flat[s + 1] : 255;
+    } else {
+      const idx = flat[s] * 3;
+      rgba[o] = palette[idx]; rgba[o + 1] = palette[idx + 1]; rgba[o + 2] = palette[idx + 2];
+      rgba[o + 3] = trns && flat[s] < trns.length ? trns[flat[s]] : 255;
+    }
+  }
+  return { width, height, rgba };
+}
+
+module.exports = { encodePNG, decodePNG, makeCanvas, downsample };

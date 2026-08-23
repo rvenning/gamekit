@@ -54,7 +54,7 @@ service cloud.firestore {
                           "turrettown", "ricochetspire", "rocketrescue",
                           "scribblespeedway", "canarydeep", "numberninja",
                           "wondermuseum", "bubblebrew", "cookiecrumble",
-                          "updraft"];
+                          "updraft", "aquamarine"];
     }
   }
 }
