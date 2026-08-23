@@ -12,8 +12,8 @@ that exercises every component; read its source as living documentation.
 | File | What it does |
 |---|---|
 | `gk/gk-util.js` | helpers: `esc`, `clamp`, `lerp`, `rand`, `pick`, `shade`, `hash2`, plus `seededRand`/`seedFrom` — a reproducible RNG for daily challenges and deterministic tests |
-| `gk/gk-audio.js` | `GK.Sfx` — WebAudio synth (`tone`, `noise`) + default `click/coin/win/lose/wrong`; games add their own jingles |
-| `gk/gk-ui.js` | `GK.UI` — screens (`.screen` + `#screen-NAME`), modals (`.modal.visible`), toast, sound toggle |
+| `gk/gk-audio.js` | `GK.Sfx` — WebAudio synth (`tone`, `noise`) + default `click/coin/win/lose/wrong`; games add their own jingles. Wakes its own AudioContext on the first gesture, so menus are audible without the game calling `init()` |
+| `gk/gk-ui.js` | `GK.UI` — screens (`.screen` + `#screen-NAME`), modals (`.modal.visible`), toast, sound toggle, and `bindMenuClicks()` — one delegated listener that clicks any menu button whose own handler stayed silent |
 | `gk/gk-storage.js` | `GK.createStorage(cfg)` — localStorage persistence + optional Firestore family sync (profiles, progress, tombstoned deletes; progress writes debounced, flushed on tab hide/close) |
 | `gk/gk-profiles.js` | `GK.Profiles` — emoji-avatar roster, 4-digit PINs with admin override, type-name delete, leaderboard renderer; injects its own modals |
 | `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS) |

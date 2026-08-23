@@ -42,6 +42,32 @@ GK.UI = {
     update();
   },
 
+  // Gives every menu button a click, without hand-wiring dozens of handlers
+  // and missing half of them. One listener at document level, in the BUBBLE
+  // phase — after the button's own handler has run — clicks only if that handler
+  // stayed silent, so a button with a sound of its own (a purchase, a star, a
+  // page turn) keeps it and never doubles up. The capture pass records the
+  // decision while the button is still in the DOM, because a handler that
+  // re-renders the screen detaches it before the bubble pass sees it.
+  //
+  // quiet: a selector whose subtree stays untouched. Defaults to the gameplay
+  // screen, where taps are moves and the game speaks for itself; pass "" for a
+  // game whose #screen-game is really a menu (a scorer, a card dealer).
+  bindMenuClicks({ selector = "button, [role=button]", quiet = "#screen-game" } = {}) {
+    if (this._menuClicks) return;
+    this._menuClicks = true;
+    let armed = false, plays = 0;
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest && e.target.closest(selector);
+      armed = !!el && !el.disabled && !(quiet && el.closest(quiet));
+      plays = GK.Sfx.plays;
+    }, true);
+    document.addEventListener("click", () => {
+      if (armed && GK.Sfx.plays === plays) GK.Sfx.click();
+      armed = false;
+    });
+  },
+
   // Inject a chunk of HTML (modal boilerplate etc.) at the end of <body>.
   inject(html) {
     const div = document.createElement("div");

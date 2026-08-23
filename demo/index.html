@@ -202,6 +202,8 @@ GK.Profiles.init({
 
 GK.Sfx.enabled = Storage.getSettings().sound;
 GK.UI.bindSoundToggle(Storage);
+// Every menu button clicks; buttons that make their own sound keep it.
+GK.UI.bindMenuClicks();
 GK.initPWA({ appName: "Reflex" });
 
 // one-tap continue for this device's last player (GK.Profiles.lastProfile)
