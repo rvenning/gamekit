@@ -12,6 +12,15 @@
    width:100% + padding on inputs/buttons overflows without border-box. */
 .screen, .screen *, .modal, .modal *, .toast { box-sizing: border-box; }
 
+/* The HTML `hidden` attribute must win. Any author rule with a class selector
+   — .btn { display:inline-flex }, .screen { display:none }, and their friends
+   below — out-specifies the browser's UA `[hidden] { display:none }`, so
+   `el.hidden = true` on an element carrying one of those classes silently does
+   nothing: the control stays on screen and stays clickable. Aquamarine shipped
+   a free reroll that way — the Roll button hid itself after rolling, except it
+   didn't. */
+[hidden] { display: none !important; }
+
 :root {
   --gk-accent: #ffb32b;
   --gk-accent-sh: #d98e12;

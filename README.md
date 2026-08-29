@@ -20,7 +20,7 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
 | `gk/gk-debug.js` | `GK.Debug` — dev tools behind `?debug=1`: floating panel, FPS, `toggle`/`action`/`jump` controls games register themselves. **Suppresses progress writes while on** |
 | `gk/gk-path.js` | `GK.Route` + `GK.Corridor` — levels authored as **waypoints** instead of tile maps, plus the linters that keep them honest. A route is a polyline you walk by distance (Turret Town's roads); a corridor is a centre-line-and-width profile you sample across (Rocket Rescue's caves), with `place(x, t)` for positioning content by a fraction of the passage so it can never land inside solid geometry |
-| `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties |
+| `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties; also makes the `hidden` attribute authoritative (`[hidden] { display:none !important }`) so `el.hidden = true` works on kit-styled controls |
 | `sw-template.js` | network-first service worker — copy to the game, set cache name + shell list |
 | `manifest-template.json` | PWA manifest starter |
 | `tools/png.js` | dependency-free PNG encoder + shape painter for generating PWA icons |
@@ -175,3 +175,8 @@ fun" before a game reaches the kids.
 - Profile roster container: `<div id="profile-list">` (id configurable)
 - Install button: `<button id="btn-install" style="display:none">`
 - Admin PIN default `7777` (configurable via `GK.Profiles.init({ adminPin })`)
+- `el.hidden = true` genuinely hides — including `.btn`, `.screen` and the rest.
+  Class rules like `.btn { display:inline-flex }` sit in the author origin and so beat
+  the browser's UA `[hidden] { display:none }`; without the kit's `!important`
+  override a hidden button stays on screen **and stays clickable**. Aquamarine's
+  Roll button gave a free reroll that way.
