@@ -20,11 +20,12 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
 | `gk/gk-debug.js` | `GK.Debug` — dev tools behind `?debug=1`: floating panel, FPS, `toggle`/`action`/`jump` controls games register themselves. **Suppresses progress writes while on** |
 | `gk/gk-path.js` | `GK.Route` + `GK.Corridor` — levels authored as **waypoints** instead of tile maps, plus the linters that keep them honest. A route is a polyline you walk by distance (Turret Town's roads); a corridor is a centre-line-and-width profile you sample across (Rocket Rescue's caves), with `place(x, t)` for positioning content by a fraction of the passage so it can never land inside solid geometry |
-| `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties; also makes the `hidden` attribute authoritative (`[hidden] { display:none !important }`) so `el.hidden = true` works on kit-styled controls |
+| `gk/gk-base.css` | shared styles for all of the above, themed via `--gk-*` custom properties (button lettering is `--gk-btn-ink`, defaulting to `--gk-ink`; set it to `#fff` if your game's accent is dark); also makes the `hidden` attribute authoritative (`[hidden] { display:none !important }`) so `el.hidden = true` works on kit-styled controls |
 | `sw-template.js` | network-first service worker — copy to the game, set cache name + shell list |
 | `manifest-template.json` | PWA manifest starter |
 | `tools/png.js` | dependency-free PNG encoder + shape painter for generating PWA icons |
 | `tools/sync-to-game.js` | vendors the kit into a game's `lib/` folder |
+| `tools/contrast.js` | WCAG 2.x contrast measurement — `--css <file>` audits a game's `--gk-*` palette. Button colours are a contrast decision; measure them rather than eyeballing |
 
 ## How games consume it
 

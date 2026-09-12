@@ -22,13 +22,33 @@
 [hidden] { display: none !important; }
 
 :root {
-  --gk-accent: #ffb32b;
+  /* Button colours are a contrast decision, not a palette whim: .btn prints
+     lettering on every one of these. Ratios below are WCAG 2.x, measured with
+     tools/contrast.js — never eyeballed. The bar is 4.5:1 for normal text and
+     3:1 for large (>=18.66px bold); .btn is 19px/800 and so counts as large,
+     but the kit aims for 4.5:1 so a smaller label added to a button later
+     (.btn .sub, which several games use) cannot quietly drop under the bar.
+
+     The old green/blue/grey/danger measured 2.21 / 3.01 / 3.10 / 3.68 against
+     the white lettering they were paired with — green failed even the large
+     bar. These darker values are the ones tiny-rex and block-party ship. */
+  --gk-accent: #ffb32b;                            /* 8.98 vs --gk-ink below */
   --gk-accent-sh: #d98e12;
-  --gk-green: #43c65a;   --gk-green-sh: #2f9a41;
-  --gk-blue:  #3f9be0;   --gk-blue-sh:  #2b74ab;
-  --gk-grey:  #8794a0;   --gk-grey-sh:  #5e6b76;
-  --gk-danger:#e94f4f;   --gk-danger-sh:#b83636;
+  --gk-green: #1a8253;   --gk-green-sh: #106b42;   /* 4.81 vs #fff */
+  --gk-blue:  #2670ab;   --gk-blue-sh:  #17527f;   /* 5.26 vs #fff */
+  --gk-grey:  #616675;   --gk-grey-sh:  #414553;   /* 5.72 vs #fff */
+  --gk-danger:#c0463d;   --gk-danger-sh:#8c2f28;   /* 5.01 vs #fff */
   --gk-ink:   #12232e;
+
+  /* Lettering on the DEFAULT (accent) button. Accent is a light amber, so it
+     carries ink: white on #ffb32b is 1.78:1, ink on that very same amber is
+     8.98:1 — the fix costs no colour change at all. It is a token because a
+     game whose accent is DARK wants white back, and measuring beats assuming:
+     bramble-brigade #1a8253, sorting-office #c92a63 and turret-town #b8452f
+     all read better white than ink, so those games set --gk-btn-ink:#fff.
+     The .green/.blue/.grey/.danger variants are dark by construction and
+     always take white, set explicitly below. */
+  --gk-btn-ink: var(--gk-ink);
   --gk-card:  rgba(255,255,255,.95);
   --gk-input-border: #d8dee4;
   --gk-key-bg: #f0f3f6;
@@ -64,12 +84,15 @@ h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25
 /* ---------- Buttons ---------- */
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px;
        border:none; border-radius:16px; padding:16px 22px; font-size:19px; font-weight:800;
-       cursor:pointer; color:#fff; background:var(--gk-accent); box-shadow:0 6px 0 var(--gk-accent-sh);
+       cursor:pointer; color:var(--gk-btn-ink); background:var(--gk-accent); box-shadow:0 6px 0 var(--gk-accent-sh);
        margin:8px 0; }
 .btn.green  { background:var(--gk-green);  box-shadow:0 6px 0 var(--gk-green-sh); }
 .btn.blue   { background:var(--gk-blue);   box-shadow:0 6px 0 var(--gk-blue-sh); }
 .btn.grey   { background:var(--gk-grey);   box-shadow:0 6px 0 var(--gk-grey-sh); }
 .btn.danger { background:var(--gk-danger); box-shadow:0 6px 0 var(--gk-danger-sh); }
+/* Explicit, because the base rule no longer assumes white: these four are dark
+   enough to need it (4.81-5.72 vs #fff), and ink on them measures 2.45-3.34. */
+.btn.green, .btn.blue, .btn.grey, .btn.danger { color:#fff; }
 .btn.wide   { width:100%; }
 .btn:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.3); }
 .btn:disabled { filter:grayscale(.7) brightness(.9); cursor:not-allowed; }
@@ -80,13 +103,23 @@ h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25
                 align-items:center; gap:12px; background:var(--gk-card); color:var(--gk-ink);
                 border-radius:18px; padding:14px 16px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.15); }
 .profile-card:active { transform:translateY(2px); }
-.profile-card .avatar { font-size:40px; grid-row:1/3; text-align:center; }
-.profile-card .pname { font-weight:800; font-size:20px; }
-.profile-card .pmeta { font-size:14px; opacity:.7; grid-column:2; }
+/* Every cell is placed EXPLICITLY. The layout is avatar | name+meta | buttons,
+   and it does not come out that way on auto-placement: .avatar and .row-btns
+   both carry a definite grid-row, and CSS grid places every definite-row item
+   BEFORE the auto-placed ones. So .row-btns took column 2, .pname was pushed
+   out to column 3 hard against the right edge, and .pmeta dropped to a third
+   row underneath. Measured in the browser, not guessed: .row-btns sat at
+   x=103 w=158 while .pname sat at x=273. Pinning the columns puts it back. */
+.profile-card .avatar { font-size:40px; grid-column:1; grid-row:1/3; text-align:center; }
+.profile-card .pname { font-weight:800; font-size:20px; grid-column:2; grid-row:1; }
+.profile-card .pmeta { font-size:14px; opacity:.7; grid-column:2; grid-row:2; }
+/* The add card is two columns (no buttons) and renders avatar + pname only, so
+   its name spans both rows instead of sitting at the top of a two-row card. */
 .profile-card.add { opacity:.9; grid-template-columns:56px 1fr; }
+.profile-card.add .pname { grid-row:1/3; align-self:center; }
 .profile-card .ppin, .profile-card .pdelete {
-    background:none; border:none; font-size:20px; cursor:pointer; grid-row:1/3; }
-.profile-card .row-btns { grid-row:1/3; display:flex; gap:2px; }
+    background:none; border:none; font-size:20px; cursor:pointer; }
+.profile-card .row-btns { grid-column:3; grid-row:1/3; display:flex; gap:2px; }
 
 /* ---------- Leaderboard (rendered by gk-profiles.js) ---------- */
 .lb-row { display:grid; grid-template-columns:44px 46px 1fr auto auto; align-items:center; gap:10px;
