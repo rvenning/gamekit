@@ -43,9 +43,13 @@
   /* Lettering on the DEFAULT (accent) button. Accent is a light amber, so it
      carries ink: white on #ffb32b is 1.78:1, ink on that very same amber is
      8.98:1 — the fix costs no colour change at all. It is a token because a
-     game whose accent is DARK wants white back, and measuring beats assuming:
-     bramble-brigade #1a8253, sorting-office #c92a63 and turret-town #b8452f
-     all read better white than ink, so those games set --gk-btn-ink:#fff.
+     game whose accent is DARK wants white back. Which games those are was
+     settled by reading computed styles in the browser, not by reading the
+     stylesheets: most games paint their own accent button (often a gradient)
+     or set their own .btn colour, so the token value alone does not predict
+     it. Across the 29 games it came to exactly one — alien-chomp, whose
+     magenta #b5298f reads 5.70 white against 3.22 ink — and it sets
+     --gk-btn-ink:#fff.
      The .green/.blue/.grey/.danger variants are dark by construction and
      always take white, set explicitly below. */
   --gk-btn-ink: var(--gk-ink);
