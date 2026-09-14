@@ -13,6 +13,8 @@ GK.Sfx = {
   ctx: null,
   enabled: true,
   plays: 0,       // notes actually sounded — GK.UI.bindMenuClicks reads this
+  voices: 0,      // sources scheduled or still sounding
+  MAX_VOICES: 32, // beyond this a new note is dropped rather than overloading the audio thread
 
   init() {
     if (!this.ctx) {
@@ -22,11 +24,31 @@ GK.Sfx = {
     if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
   },
 
+  // Every note's nodes are disconnected when its source ends. WebKit (iPad and
+  // iPhone Safari) keeps CONNECTED nodes in the render graph after they stop,
+  // so without this the audio thread's work grows with every sound played until
+  // it underruns — heard as crackling that builds over a session and carries on
+  // even on a silent menu. Found on Brix, 2026-09-14.
+  _track(src, nodes) {
+    this.voices++;
+    src.onended = () => {
+      this.voices = Math.max(0, this.voices - 1);
+      for (const n of nodes) { try { n.disconnect(); } catch (e) { /* already gone */ } }
+    };
+  },
+
+  // A start time in the past skips the attack and clicks; a music scheduler
+  // that fires late asks for exactly that.
+  _startAt(when) {
+    return this.ctx.currentTime + Math.max(0, when);
+  },
+
   // One oscillator note. slide bends the pitch by +/-Hz over the duration.
   tone({ freq = 440, type = "sine", dur = 0.15, vol = 0.25, when = 0, slide = 0 }) {
     if (!this.enabled || !this.ctx) return;
     this.plays++;
-    const t = this.ctx.currentTime + when;
+    if (this.voices >= this.MAX_VOICES) return;
+    const t = this._startAt(when);
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type;
     o.frequency.setValueAtTime(freq, t);
@@ -34,6 +56,7 @@ GK.Sfx = {
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     o.connect(g).connect(this.ctx.destination);
+    this._track(o, [o, g]);
     o.start(t); o.stop(t + dur + 0.05);
   },
 
@@ -41,7 +64,8 @@ GK.Sfx = {
   noise({ dur = 0.3, vol = 0.2, when = 0 }) {
     if (!this.enabled || !this.ctx) return;
     this.plays++;
-    const t = this.ctx.currentTime + when;
+    if (this.voices >= this.MAX_VOICES) return;
+    const t = this._startAt(when);
     const n = Math.floor(this.ctx.sampleRate * dur);
     const buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
     const d = buf.getChannelData(0);
@@ -51,7 +75,9 @@ GK.Sfx = {
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     src.connect(g).connect(this.ctx.destination);
+    this._track(src, [src, g]);
     src.start(t);
+    src.stop(t + dur + 0.05);
   },
 
   /* ----- default sounds every game seems to need ----- */
