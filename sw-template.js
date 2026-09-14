@@ -3,7 +3,8 @@
 // players always get the newest deploy; offline players get the last
 // version they loaded.
 
-const CACHE = "MYGAME-v1"; // <-- 1. unique cache name; bump the -vN to force-refresh
+const CACHE = "MYGAME-v1"; // <-- 1. unique cache name ending in -vN. The N is the game's version:
+                           //    bump it with node lib/tools/stamp-version.js . --bump, not by hand
 
 // <-- 2. every file the game needs offline (don't forget lib/ and icons/)
 const SHELL = [

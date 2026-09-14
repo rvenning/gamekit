@@ -185,3 +185,11 @@ h1.title { font-size:44px; margin:30px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.25
   .profile-card { padding:18px; }
   .profile-card .ppin, .profile-card .pdelete { font-size:24px; padding:10px; }
 }
+
+/* GK.Version — the version line at the foot of the home screen (see gk-pwa.js). */
+.gk-version { margin:auto 0 0; padding:18px 12px calc(10px + env(safe-area-inset-bottom));
+              display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; justify-content:center;
+              font-size:12px; line-height:1.4; opacity:.72; text-align:center;
+              font-variant-numeric:tabular-nums; }
+.gk-version-status.ok { font-weight:700; }
+.gk-version .gk-version-update { padding:6px 12px; min-height:0; font-size:12px; }

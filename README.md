@@ -16,7 +16,7 @@ that exercises every component; read its source as living documentation.
 | `gk/gk-ui.js` | `GK.UI` — screens (`.screen` + `#screen-NAME`), modals (`.modal.visible`), toast, sound toggle, and `bindMenuClicks()` — one delegated listener that clicks any menu button whose own handler stayed silent |
 | `gk/gk-storage.js` | `GK.createStorage(cfg)` — localStorage persistence + optional Firestore family sync (profiles, progress, tombstoned deletes; progress writes debounced, flushed on tab hide/close) |
 | `gk/gk-profiles.js` | `GK.Profiles` — emoji-avatar roster, 4-digit PINs with admin override, type-name delete, leaderboard renderer; injects its own modals |
-| `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS) |
+| `gk/gk-pwa.js` | `GK.initPWA()` — service-worker registration + Add-to-Home-Screen button (`beforeinstallprompt` on Chrome, instructions modal on iOS). Also `GK.Version`: shows "Version 12 · 14 Sep 2026" at the foot of the start-up screen, then "✓ Latest" or an Update button by comparing the page's `<meta name="gk-version">` with the deployed `version.json` |
 | `gk/gk-fx.js` | `GK.Fx` — canvas juice: pooled particles (`burst`/`trail`/`dust`/`sparkle`/`splash`/`confetti`), screen shake, flash, floating text, lightning, slow-mo; plus `GK.Tween`. Per-game feel via `GK.Fx.configure({...})` |
 | `gk/gk-debug.js` | `GK.Debug` — dev tools behind `?debug=1`: floating panel, FPS, `toggle`/`action`/`jump` controls games register themselves. **Suppresses progress writes while on** |
 | `gk/gk-path.js` | `GK.Route` + `GK.Corridor` — levels authored as **waypoints** instead of tile maps, plus the linters that keep them honest. A route is a polyline you walk by distance (Turret Town's roads); a corridor is a centre-line-and-width profile you sample across (Rocket Rescue's caves), with `place(x, t)` for positioning content by a fraction of the passage so it can never land inside solid geometry |
@@ -25,6 +25,7 @@ that exercises every component; read its source as living documentation.
 | `manifest-template.json` | PWA manifest starter |
 | `tools/png.js` | dependency-free PNG encoder + shape painter for generating PWA icons |
 | `tools/sync-to-game.js` | vendors the kit into a game's `lib/` folder |
+| `tools/stamp-version.js` | `node lib/tools/stamp-version.js <game> --bump` — bumps the `-vN` on the game's sw.js cache name and writes that number into index.html and version.json. **Run it for every deploy** instead of editing sw.js by hand |
 | `tools/contrast.js` | WCAG 2.x contrast measurement — `--css <file>` audits a game's `--gk-*` palette. Button colours are a contrast decision; measure them rather than eyeballing |
 
 ## How games consume it
@@ -37,7 +38,8 @@ a game only changes when you re-sync it and test.
 ```
 # update a game to the current kit
 node tools/sync-to-game.js "D:\OneDrive\Documents\Claude Code\chicken-cross"
-# then test the game, bump its sw.js cache version, commit
+# then test the game, stamp a new version, commit
+node lib/tools/stamp-version.js . --bump   # run inside the game directory
 ```
 
 ## Wiring up a new game
@@ -91,7 +93,7 @@ Storage.initFirebase().then(ok => badge.textContent = ok ? "☁️ synced" : "�
 New-game checklist:
 1. Copy `demo/` as a starting skeleton, or wire up as above
 2. `node tools/sync-to-game.js <game>` to vendor `lib/`
-3. Copy `sw-template.js` → `sw.js` (set cache name + shell), `manifest-template.json` → `manifest.json`
+3. Copy `sw-template.js` → `sw.js` (set cache name, ending in `-v1`, + shell), `manifest-template.json` → `manifest.json`, then `node lib/tools/stamp-version.js <game>` to show the version on the home screen
 4. Write an icon script against `lib/tools/png.js` (see the games' `tools/make-icons.js`)
 5. Add a Firestore rule for the new collection in the
    [console](https://console.firebase.google.com/project/wordvoyage-e5a5c/firestore/rules)
