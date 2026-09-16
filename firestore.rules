@@ -8,7 +8,7 @@ rules_version = '2';
 //   sortingoffice · turrettown · ricochetspire · rocketrescue ·
 //   scribblespeedway · canarydeep · numberninja · wondermuseum · bubblebrew ·
 //   cookiecrumble · updraft · aquamarine · curiocabinet · tinyrex ·
-//   bramblebrigade · mathinvaders · containment · stellarsway
+//   bramblebrigade · mathinvaders · containment · stellarsway · fishingtycoon
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
 // These rules are NOT applied by deploying this repo -- paste them into the
@@ -57,7 +57,7 @@ service cloud.firestore {
                           "wondermuseum", "bubblebrew", "cookiecrumble",
                           "updraft", "aquamarine", "curiocabinet",
                           "tinyrex", "bramblebrigade", "mathinvaders",
-                          "containment", "stellarsway"];
+                          "containment", "stellarsway", "fishingtycoon"];
     }
   }
 }
