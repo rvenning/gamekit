@@ -9,6 +9,7 @@ rules_version = '2';
 //   scribblespeedway · canarydeep · numberninja · wondermuseum · bubblebrew ·
 //   cookiecrumble · updraft · aquamarine · curiocabinet · tinyrex ·
 //   bramblebrigade · mathinvaders · containment · stellarsway · fishingtycoon ·
+//   pinballparade ·
 //   monza (leaderboard only; Monza is not otherwise a gamekit game)
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
@@ -59,7 +60,7 @@ service cloud.firestore {
                           "updraft", "aquamarine", "curiocabinet",
                           "tinyrex", "bramblebrigade", "mathinvaders",
                           "containment", "stellarsway", "fishingtycoon",
-                          "monza"];
+                          "pinballparade", "monza"];
     }
   }
 }
