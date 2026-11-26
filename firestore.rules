@@ -9,7 +9,7 @@ rules_version = '2';
 //   scribblespeedway · canarydeep · numberninja · wondermuseum · bubblebrew ·
 //   cookiecrumble · updraft · aquamarine · curiocabinet · tinyrex ·
 //   bramblebrigade · mathinvaders · containment · stellarsway · fishingtycoon ·
-//   pinballparade · puttparade · sliceoflife ·
+//   pinballparade · puttparade · sliceoflife · rainbowbowling ·
 //   monza (leaderboard only; Monza is not otherwise a gamekit game)
 // with docs profile_<id>, progress_<id> and deleted_<id>.
 //
@@ -61,7 +61,7 @@ service cloud.firestore {
                           "tinyrex", "bramblebrigade", "mathinvaders",
                           "containment", "stellarsway", "fishingtycoon",
                           "pinballparade", "puttparade", "sliceoflife",
-                          "monza"];
+                          "rainbowbowling", "monza"];
     }
   }
 }
